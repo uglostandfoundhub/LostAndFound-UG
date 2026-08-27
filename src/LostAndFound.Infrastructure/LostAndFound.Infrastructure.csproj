@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LostAndFound.Domain\LostAndFound.Domain.csproj" />
+    <ProjectReference Include="..\LostAndFound.Shared\LostAndFound.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

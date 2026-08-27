@@ -3,7 +3,8 @@ namespace LostAndFound.Domain.Enums;
 public enum ItemStatus
 {
     Open,
+    UnderReview,
     Claimed,
-    Resolved,
-    Closed
+    Returned,
+    Archived
 }

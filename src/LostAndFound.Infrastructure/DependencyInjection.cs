@@ -1,5 +1,6 @@
 using LostAndFound.Domain.Entities;
 using LostAndFound.Infrastructure.Data;
+using LostAndFound.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,13 @@ public static class DependencyInjection
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
+
+        services.AddScoped<IItemService, ItemService>();
+        services.AddScoped<IClaimService, ClaimService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IMatchService, MatchService>();
 
         return services;
     }

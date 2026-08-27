@@ -2,8 +2,9 @@ namespace LostAndFound.Domain.Constants;
 
 public static class Roles
 {
+    public const string Student = "Student";
+    public const string Staff = "Staff";
     public const string Admin = "Admin";
-    public const string User = "User";
 
-    public static readonly string[] All = { Admin, User };
+    public static readonly string[] All = { Student, Staff, Admin };
 }
