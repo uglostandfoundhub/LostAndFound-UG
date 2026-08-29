@@ -1,0 +1,49 @@
+@page "/login"
+@using LostAndFound.Client.Services
+@using LostAndFound.Shared.Dtos.Auth
+@inject ApiAuthStateProvider AuthState
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Login</PageTitle>
+
+<h3>Login</h3>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="form-group mb-2">
+    <label>Email</label>
+    <input class="form-control" @bind="model.Email" />
+</div>
+<div class="form-group mb-2">
+    <label>Password</label>
+    <input type="password" class="form-control" @bind="model.Password" />
+</div>
+
+<button class="btn btn-primary" @onclick="DoLogin" disabled="@busy">@(busy ? "Please wait..." : "Login")</button>
+
+@code {
+    private LoginRequest model = new();
+    private string error = string.Empty;
+    private bool busy;
+
+    private async Task DoLogin()
+    {
+        busy = true;
+        error = string.Empty;
+
+        var response = await Api.LoginAsync(model);
+        if (response is null)
+        {
+            error = "Invalid credentials.";
+            busy = false;
+            return;
+        }
+
+        await AuthState.LoginAsync(response.Token);
+        Nav.NavigateTo("");
+    }
+}

@@ -1,0 +1,52 @@
+@page "/items"
+@using LostAndFound.Client.Services
+@using LostAndFound.Shared.Dtos.Items
+@inject ApiClient Api
+
+<PageTitle>Items</PageTitle>
+
+<h3>Lost &amp; Found Items</h3>
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else if (items is null)
+{
+    <div class="alert alert-warning">
+        Could not load items. Make sure the API is running and <code>ApiBaseUrl</code> in
+        <code>wwwroot/appsettings.json</code> points at it.
+    </div>
+}
+else
+{
+    <p>@items.TotalCount item(s) found.</p>
+    <table class="table table-striped">
+        <thead>
+            <tr><th>Title</th><th>Type</th><th>Status</th><th>Category</th><th>Location</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var it in items.Items)
+        {
+            <tr>
+                <td>@it.Title</td>
+                <td>@it.Type</td>
+                <td>@it.Status</td>
+                <td>@it.CategoryName</td>
+                <td>@it.LocationName</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private PagedResult<ItemDto>? items;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await Api.GetItemsAsync(new ItemSearchParameters());
+        loading = false;
+    }
+}

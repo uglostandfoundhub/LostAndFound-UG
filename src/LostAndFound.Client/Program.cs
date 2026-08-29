@@ -1,11 +1,22 @@
+using LostAndFound.Client;
+using LostAndFound.Client.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using LostAndFound.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+var apiBase = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7070";
+
+builder.Services.AddScoped<ITokenStorage, TokenStorage>();
+builder.Services.AddScoped<AuthMessageHandler>();
+builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri(apiBase))
+    .AddHttpMessageHandler<AuthMessageHandler>();
+
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthStateProvider>();
 
 await builder.Build().RunAsync();
