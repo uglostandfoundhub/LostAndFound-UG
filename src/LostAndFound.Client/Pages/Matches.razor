@@ -1,0 +1,88 @@
+@page "/matches"
+@using LostAndFound.Shared.Dtos.Items
+@using LostAndFound.Shared.Dtos.Matches
+@inject ApiClient Api
+
+<PageTitle>Matches</PageTitle>
+
+<h3>Potential matches</h3>
+
+@if (!authed)
+{
+    <div class="alert alert-warning">You must <a href="login">log in</a> to view matches.</div>
+    return;
+}
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h5>Your items</h5>
+    @if (myItems is null) { <p>Could not load items.</p> }
+    else if (myItems.Count == 0) { <p>You have no items to match.</p> }
+    else
+    {
+        <div class="mb-3">
+        @foreach (var it in myItems)
+        {
+            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" @onclick="() => Generate(it.Id)">Find matches for "@it.Title"</button>
+        }
+        </div>
+    }
+
+    <h5>Suggested matches</h5>
+    @if (matches is null) { <p>Could not load matches.</p> }
+    else if (matches.Count == 0) { <p>No matches yet. Generate matches for one of your items above.</p> }
+    else
+    {
+        <table class="table table-striped">
+            <thead><tr><th>Lost item</th><th>Found item</th><th>Score</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var m in matches)
+            {
+                <tr>
+                    <td><a href="/items/@m.LostItemId">@m.LostItemTitle</a></td>
+                    <td><a href="/items/@m.FoundItemId">@m.FoundItemTitle</a></td>
+                    <td>@(m.Score.ToString("P0"))</td>
+                    <td><button class="btn btn-sm btn-outline-danger" @onclick="() => Dismiss(m.Id)">Dismiss</button></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private bool authed;
+    private bool loading = true;
+    private IReadOnlyList<ItemDto>? myItems;
+    private IReadOnlyList<MatchDto>? matches;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Api.GetCurrentUserAsync();
+        authed = user is not null;
+        if (authed)
+        {
+            myItems = await Api.GetMyItemsAsync();
+            matches = await Api.GetMyMatchesAsync();
+        }
+        loading = false;
+    }
+
+    private async Task Generate(int itemId)
+    {
+        var result = await Api.GenerateMatchesAsync(itemId);
+        if (result is not null) matches = result;
+    }
+
+    private async Task Dismiss(int id)
+    {
+        if (await Api.DismissMatchAsync(id))
+        {
+            matches = matches?.Where(m => m.Id != id).ToList();
+        }
+    }
+}

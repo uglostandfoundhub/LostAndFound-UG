@@ -32,6 +32,7 @@ public static class DependencyInjection
         .AddDefaultTokenProviders();
 
         services.AddScoped<IItemService, ItemService>();
+        services.AddScoped<IItemImageService, ItemImageService>();
         services.AddScoped<IClaimService, ClaimService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ILocationService, LocationService>();

@@ -13,6 +13,11 @@ public class ClaimsController : ApiControllerBase
 
     public ClaimsController(IClaimService claims) => _claims = claims;
 
+    [HttpGet]
+    [Authorize(Roles = Roles.Staff + "," + Roles.Admin)]
+    public async Task<IActionResult> All() =>
+        ToAction(await _claims.GetAllAsync());
+
     [HttpPost("items/{itemId:int}/claims")]
     public async Task<IActionResult> Create(int itemId, CreateClaimRequest request) =>
         ToAction(await _claims.CreateAsync(itemId, request, CurrentUserId!));

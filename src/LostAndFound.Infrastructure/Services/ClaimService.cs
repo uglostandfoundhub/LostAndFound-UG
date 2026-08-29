@@ -13,6 +13,7 @@ public interface IClaimService
     Task<Result<IReadOnlyList<ClaimDto>>> GetForItemAsync(int itemId, CancellationToken ct = default);
     Task<Result<IReadOnlyList<ClaimDto>>> GetMineAsync(string userId, CancellationToken ct = default);
     Task<Result<ClaimDto>> ReviewAsync(int claimId, ReviewClaimRequest r, string reviewerId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<ClaimDto>>> GetAllAsync(CancellationToken ct = default);
 }
 
 public class ClaimService : IClaimService
@@ -105,6 +106,14 @@ public class ClaimService : IClaimService
 
         await _db.SaveChangesAsync(ct);
         return Result<ClaimDto>.Ok(Map(await WithNavs(_db.ItemClaims).FirstAsync(c => c.Id == claim.Id, ct)));
+    }
+
+    public async Task<Result<IReadOnlyList<ClaimDto>>> GetAllAsync(CancellationToken ct = default)
+    {
+        var claims = await WithNavs(_db.ItemClaims)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+        return Result<IReadOnlyList<ClaimDto>>.Ok(claims.Select(Map).ToList());
     }
 
     private static ClaimDto Map(ItemClaim c) => new()

@@ -16,9 +16,10 @@ public class ItemsController : ApiControllerBase
     public async Task<IActionResult> Search([FromQuery] ItemSearchParameters parameters) =>
         ToAction(await _items.SearchAsync(parameters));
 
-    [HttpGet("{id:int}")]
-    [AllowAnonymous]
-    public async Task<IActionResult> Get(int id) => ToAction(await _items.GetByIdAsync(id));
+    [HttpGet("mine")]
+    [Authorize]
+    public async Task<IActionResult> Mine() =>
+        ToAction(await _items.GetForOwnerAsync(CurrentUserId!));
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateItemRequest request) =>

@@ -67,7 +67,13 @@ public class ApiClient
     public async Task<IReadOnlyList<LocationDto>?> GetLocationsAsync() =>
         await _http.GetFromJsonAsync<IReadOnlyList<LocationDto>>("api/locations");
 
-    // ----- Claims -----
+    // ----- Items -----
+    public async Task<IReadOnlyList<ItemDto>?> GetMyItemsAsync()
+    {
+        var resp = await _http.GetAsync("api/items/mine");
+        return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<IReadOnlyList<ItemDto>>() : null;
+    }
+
     public async Task<ClaimDto?> CreateClaimAsync(int itemId, CreateClaimRequest request)
     {
         var resp = await _http.PostAsJsonAsync($"api/items/{itemId}/claims", request);
@@ -82,6 +88,13 @@ public class ApiClient
         var resp = await _http.PostAsJsonAsync($"api/claims/{id}/review", request);
         return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<ClaimDto>() : null;
     }
+
+    // ----- Claims (item-level, staff/admin) -----
+    public async Task<IReadOnlyList<ClaimDto>?> GetItemClaimsAsync(int itemId) =>
+        await _http.GetFromJsonAsync<IReadOnlyList<ClaimDto>>($"api/items/{itemId}/claims");
+
+    public async Task<IReadOnlyList<ClaimDto>?> GetAllClaimsAsync() =>
+        await _http.GetFromJsonAsync<IReadOnlyList<ClaimDto>>("api/claims");
 
     // ----- Matches -----
     public async Task<IReadOnlyList<MatchDto>?> GetMyMatchesAsync() =>
@@ -107,6 +120,35 @@ public class ApiClient
     {
         var resp = await _http.PostAsync($"api/notifications/{id}/read", null);
         return resp.IsSuccessStatusCode;
+    }
+
+    // ----- Images -----
+    public async Task<IReadOnlyList<ImageDto>?> GetItemImagesAsync(int itemId) =>
+        await _http.GetFromJsonAsync<IReadOnlyList<ImageDto>>($"api/items/{itemId}/images");
+
+    public async Task<ImageDto?> UploadImageAsync(int itemId, string fileName, byte[] content, string contentType, bool isPrimary)
+    {
+        var form = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(content);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        form.Add(fileContent, "file", fileName);
+
+        var url = $"api/items/{itemId}/images?isPrimary={(isPrimary ? "true" : "false")}";
+        var resp = await _http.PostAsync(url, form);
+        return resp.IsSuccessStatusCode ? await resp.Content.ReadFromJsonAsync<ImageDto>() : null;
+    }
+
+    public async Task<bool> DeleteImageAsync(int itemId, int imageId)
+    {
+        var resp = await _http.DeleteAsync($"api/items/{itemId}/images/{imageId}");
+        return resp.IsSuccessStatusCode;
+    }
+
+    public string? GetImageUrl(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || _http.BaseAddress is null)
+            return path;
+        return new Uri(_http.BaseAddress, path).ToString();
     }
 
     private static string ToQuery(ItemSearchParameters p)

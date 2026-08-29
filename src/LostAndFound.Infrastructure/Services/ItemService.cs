@@ -14,6 +14,7 @@ public interface IItemService
     Task<Result<ItemDto>> CreateAsync(CreateItemRequest r, string userId, CancellationToken ct = default);
     Task<Result<ItemDto>> UpdateAsync(int id, UpdateItemRequest r, string userId, CancellationToken ct = default);
     Task<Result> DeleteAsync(int id, string userId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<ItemDto>>> GetForOwnerAsync(string userId, CancellationToken ct = default);
 }
 
 public class ItemService : IItemService
@@ -128,6 +129,15 @@ public class ItemService : IItemService
         _db.Items.Remove(item);
         await _db.SaveChangesAsync(ct);
         return Result.Ok();
+    }
+
+    public async Task<Result<IReadOnlyList<ItemDto>>> GetForOwnerAsync(string userId, CancellationToken ct = default)
+    {
+        var items = await WithNavs(_db.Items)
+            .Where(i => i.ReportedById == userId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync(ct);
+        return Result<IReadOnlyList<ItemDto>>.Ok(items.Select(Map).ToList());
     }
 
     private static ItemDto Map(Item i) => new()

@@ -64,4 +64,16 @@ public class ApiAuthStateProvider : AuthenticationStateProvider
         claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt"));
     }
+
+    public async Task<ClaimsPrincipal> GetUserAsync()
+    {
+        var state = await GetAuthenticationStateAsync();
+        return state.User;
+    }
+
+    public async Task<bool> IsInRoleAsync(string role)
+    {
+        var user = await GetUserAsync();
+        return user.Identity is { IsAuthenticated: true } && user.IsInRole(role);
+    }
 }

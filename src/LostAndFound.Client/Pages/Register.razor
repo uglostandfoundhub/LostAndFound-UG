@@ -1,0 +1,64 @@
+@page "/register"
+@using LostAndFound.Shared.Dtos.Auth
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject ApiAuthStateProvider AuthState
+
+<PageTitle>Register</PageTitle>
+
+<h3>Create an account</h3>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group mb-2">
+            <label>Full name</label>
+            <input class="form-control" @bind="model.FullName" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Email</label>
+            <input class="form-control" @bind="model.Email" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Password</label>
+            <input type="password" class="form-control" @bind="model.Password" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Student ID (optional)</label>
+            <input class="form-control" @bind="model.StudentId" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Department (optional)</label>
+            <input class="form-control" @bind="model.Department" />
+        </div>
+        <button class="btn btn-primary" @onclick="DoRegister" disabled="@busy">@(busy ? "Creating..." : "Register")</button>
+        <p class="mt-2">Already have an account? <a href="login">Log in</a>.</p>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest model = new();
+    private string error = string.Empty;
+    private bool busy;
+
+    private async Task DoRegister()
+    {
+        busy = true;
+        error = string.Empty;
+
+        var response = await Api.RegisterAsync(model);
+        if (response is null)
+        {
+            error = "Registration failed. The email may already be in use or the password is too weak.";
+            busy = false;
+            return;
+        }
+
+        await AuthState.LoginAsync(response.Token);
+        Nav.NavigateTo("");
+    }
+}

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using LostAndFound.Api.Services;
 using LostAndFound.Domain.Entities;
@@ -54,6 +55,8 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads"));
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -71,6 +74,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

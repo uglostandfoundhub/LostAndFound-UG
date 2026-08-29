@@ -1,0 +1,142 @@
+@page "/items/{Id:int}"
+@using LostAndFound.Shared.Dtos.Items
+@using LostAndFound.Shared.Dtos.Claims
+@using LostAndFound.Shared.Dtos
+@inject ApiClient Api
+@inject ApiAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<PageTitle>Item</PageTitle>
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else if (item is null)
+{
+    <div class="alert alert-warning">Item not found.</div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-7">
+            <h3>@item.Title</h3>
+            <p><span class="badge bg-secondary">@item.Type</span> <span class="badge bg-info">@item.Status</span></p>
+            <p>@item.Description</p>
+            <ul>
+                <li>Category: @item.CategoryName</li>
+                <li>Location: @item.LocationName</li>
+                <li>Reported: @item.DateOccurred.ToString("yyyy-MM-dd") by @item.ReportedByName</li>
+                @if (!string.IsNullOrEmpty(item.ContactInfo)) { <li>Contact: @item.ContactInfo</li> }
+            </ul>
+
+            @if (images.Any())
+            {
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    @foreach (var img in images)
+                    {
+                        <img src="@Api.GetImageUrl(img.FilePath)" class="img-thumbnail" style="width:140px" />
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-md-5">
+            @if (canClaim)
+            {
+                <div class="card p-3 mb-3">
+                    <h5>Claim this item</h5>
+                    <p class="text-muted">@item.VerificationQuestion</p>
+                    <input class="form-control mb-2" placeholder="Your answer" @bind="claimAnswer" />
+                    <button class="btn btn-success" @onclick="SubmitClaim" disabled="@claimBusy">Submit claim</button>
+                    @if (!string.IsNullOrEmpty(claimError)) { <div class="alert alert-danger mt-2">@claimError</div> }
+                    @if (claimDone) { <div class="alert alert-success mt-2">Claim submitted for review.</div> }
+                </div>
+            }
+
+            @if (isOwner)
+            {
+                <button class="btn btn-danger mb-3" @onclick="DeleteItem">Delete my report</button>
+            }
+
+            @if (isStaffOrAdmin && claims is not null)
+            {
+                <div class="card p-3">
+                    <h5>Claims on this item (@claims.Count)</h5>
+                    @foreach (var c in claims)
+                    {
+                        <div class="border rounded p-2 mb-2">
+                            <div>Claimant: @c.ClaimantName</div>
+                            <div>Answer: @c.VerificationAnswer</div>
+                            @if (!string.IsNullOrEmpty(c.SupportingDetails)) { <div>Details: @c.SupportingDetails</div> }
+                            <div>Status: @c.Status</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ItemDto? item;
+    private IReadOnlyList<ImageDto> images = Array.Empty<ImageDto>();
+    private IReadOnlyList<ClaimDto>? claims;
+    private bool loading = true;
+
+    private bool isAuthed;
+    private bool isOwner;
+    private bool isStaffOrAdmin;
+    private bool canClaim;
+
+    private string claimAnswer = string.Empty;
+    private string claimError = string.Empty;
+    private bool claimBusy;
+    private bool claimDone;
+
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Api.GetItemAsync(Id);
+        images = await Api.GetItemImagesAsync(Id) ?? Array.Empty<ImageDto>();
+
+        var user = await AuthState.GetUserAsync();
+        isAuthed = user.Identity?.IsAuthenticated == true;
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        isOwner = isAuthed && item is not null && item.ReportedById == userId;
+        isStaffOrAdmin = isAuthed && (user.IsInRole("Staff") || user.IsInRole("Admin"));
+        canClaim = isAuthed && !isOwner && item is not null && item.Type == ItemType.Found &&
+                   (item.Status == ItemStatus.Open || item.Status == ItemStatus.UnderReview);
+
+        if (isStaffOrAdmin)
+        {
+            claims = await Api.GetItemClaimsAsync(Id) ?? Array.Empty<ClaimDto>();
+        }
+
+        loading = false;
+    }
+
+    private async Task SubmitClaim()
+    {
+        claimBusy = true;
+        claimError = string.Empty;
+        var result = await Api.CreateClaimAsync(Id, new CreateClaimRequest { VerificationAnswer = claimAnswer });
+        claimBusy = false;
+        if (result is null)
+        {
+            claimError = "Could not submit the claim.";
+            return;
+        }
+        claimDone = true;
+    }
+
+    private async Task DeleteItem()
+    {
+        if (await Api.DeleteItemAsync(Id))
+        {
+            Nav.NavigateTo("/my-items");
+        }
+    }
+}
