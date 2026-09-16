@@ -118,8 +118,15 @@
 
     private async Task Submit()
     {
-        busy = true;
         error = string.Empty;
+
+        if (string.IsNullOrEmpty(categoryValue) || string.IsNullOrEmpty(locationValue))
+        {
+            error = "Please select a category and a location.";
+            return;
+        }
+
+        busy = true;
 
         model.Type = (ItemType)int.Parse(typeValue);
         model.CategoryId = int.Parse(categoryValue);

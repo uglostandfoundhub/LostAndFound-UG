@@ -1,4 +1,5 @@
 @page "/login"
+@layout AuthLayout
 @using LostAndFound.Client.Services
 @using LostAndFound.Shared.Dtos.Auth
 @inject ApiAuthStateProvider AuthState
@@ -7,23 +8,43 @@
 
 <PageTitle>Login</PageTitle>
 
-<h3>Login</h3>
+<div class="auth-page">
+    <div class="auth-visual">
+        <div class="auth-visual-content">
+            <div class="auth-emblem">L&amp;F</div>
+            <h1>Campus Lost &amp; Found</h1>
+            <p>Reuniting students and staff with what they've lost, one report at a time.</p>
+        </div>
+    </div>
 
-@if (!string.IsNullOrEmpty(error))
-{
-    <div class="alert alert-danger">@error</div>
-}
+    <div class="auth-form-panel">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-logo">L&amp;F</div>
+                <h2>Welcome back</h2>
+                <p class="auth-subtitle">Sign in to continue</p>
+            </div>
 
-<div class="form-group mb-2">
-    <label>Email</label>
-    <input class="form-control" @bind="model.Email" />
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+
+            <div class="auth-field">
+                <label>Email</label>
+                <input class="auth-input" @bind="model.Email" />
+            </div>
+            <div class="auth-field">
+                <label>Password</label>
+                <input type="password" class="auth-input" @bind="model.Password" />
+            </div>
+
+            <button class="btn-auth" @onclick="DoLogin" disabled="@busy">@(busy ? "Please wait..." : "Login")</button>
+
+            <p class="auth-footer-link">Don't have an account? <a href="register">Register</a></p>
+        </div>
+    </div>
 </div>
-<div class="form-group mb-2">
-    <label>Password</label>
-    <input type="password" class="form-control" @bind="model.Password" />
-</div>
-
-<button class="btn btn-primary" @onclick="DoLogin" disabled="@busy">@(busy ? "Please wait..." : "Login")</button>
 
 @code {
     private LoginRequest model = new();

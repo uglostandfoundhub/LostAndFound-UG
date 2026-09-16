@@ -21,6 +21,11 @@ public class ItemsController : ApiControllerBase
     public async Task<IActionResult> Mine() =>
         ToAction(await _items.GetForOwnerAsync(CurrentUserId!));
 
+    [HttpGet("{id:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(int id) =>
+        ToAction(await _items.GetByIdAsync(id));
+
     [HttpPost]
     public async Task<IActionResult> Create(CreateItemRequest request) =>
         ToAction(await _items.CreateAsync(request, CurrentUserId!));

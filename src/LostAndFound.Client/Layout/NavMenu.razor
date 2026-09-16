@@ -1,81 +1,36 @@
-﻿@inject ApiAuthStateProvider AuthState
+@inject ApiAuthStateProvider AuthState
 @inject NavigationManager Nav
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Lost &amp; Found</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+<button title="Navigation menu" class="nav-toggle" @onclick="ToggleNavMenu">
+    <span class="nav-toggle-bar"></span>
+    <span class="nav-toggle-bar"></span>
+    <span class="nav-toggle-bar"></span>
+</button>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="items">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Items
-            </NavLink>
-        </div>
+<nav class="main-nav @NavMenuCssClass">
+    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+    <NavLink class="nav-link" href="items">Items</NavLink>
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="report">
-                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Report
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="my-items">
-                        <span class="bi bi-box-seam-nav-menu" aria-hidden="true"></span> My Items
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="matches">
-                        <span class="bi bi-diagram-3-nav-menu" aria-hidden="true"></span> Matches
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="notifications">
-                        <span class="bi bi-bell-nav-menu" aria-hidden="true"></span> Notifications
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="claims">
-                        <span class="bi bi-clipboard-check-nav-menu" aria-hidden="true"></span> Claims
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <button class="btn btn-link nav-link text-start ps-0" @onclick="Logout">
-                        <span class="bi bi-box-arrow-right-nav-menu" aria-hidden="true"></span> Logout (@context.User.Identity?.Name)
-                    </button>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="login">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="register">
-                        <span class="bi bi-person-plus-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-link" href="report">Report</NavLink>
+            <NavLink class="nav-link" href="my-items">My Items</NavLink>
+            <NavLink class="nav-link" href="matches">Matches</NavLink>
+            <NavLink class="nav-link" href="notifications">Notifications</NavLink>
+            <NavLink class="nav-link" href="claims">Claims</NavLink>
+            <button class="nav-link nav-link-btn" @onclick="Logout">Logout (@context.User.Identity?.Name)</button>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="nav-link" href="login">Login</NavLink>
+            <NavLink class="nav-link nav-link-cta" href="register">Register</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : "expanded";
 
     private void ToggleNavMenu()
     {

@@ -1,16 +1,29 @@
-﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+@inherits LayoutComponentBase
+
+<div class="app-shell">
+    <div class="top-strip">
+        <div class="top-strip-inner">
+            <span>University of Ghana &middot; Campus Lost &amp; Found</span>
+        </div>
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+    <header class="app-header">
+        <div class="app-header-inner">
+            <a class="brand" href="">
+                <span class="brand-mark">L&amp;F</span>
+                <span class="brand-text">Lost &amp; Found</span>
+            </a>
+            <NavMenu />
         </div>
+    </header>
 
-        <article class="content px-4">
+    <main class="app-main">
+        <div class="app-content">
             @Body
-        </article>
+        </div>
     </main>
+
+    <footer class="app-footer">
+        <span>&copy; @DateTime.Now.Year University of Ghana Lost &amp; Found</span>
+    </footer>
 </div>

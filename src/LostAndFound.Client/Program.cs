@@ -18,7 +18,8 @@ builder.Services.AddHttpClient<ApiClient>(client => client.BaseAddress = new Uri
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthStateProvider>();
+builder.Services.AddScoped<ApiAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthStateProvider>());
 builder.Services.AddScoped<LookupsCache>();
 
 await builder.Build().RunAsync();
