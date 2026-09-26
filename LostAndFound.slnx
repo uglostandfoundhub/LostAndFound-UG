@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LostAndFound.Api/LostAndFound.Api.csproj" />
+    <Project Path="src/LostAndFound.Client/LostAndFound.Client.csproj" />
+    <Project Path="src/LostAndFound.Domain/LostAndFound.Domain.csproj" />
+    <Project Path="src/LostAndFound.Infrastructure/LostAndFound.Infrastructure.csproj" />
+    <Project Path="src/LostAndFound.Shared/LostAndFound.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LostAndFound.IntegrationTests/LostAndFound.IntegrationTests.csproj" />
+    <Project Path="tests/LostAndFound.UnitTests/LostAndFound.UnitTests.csproj" />
+  </Folder>
+</Solution>

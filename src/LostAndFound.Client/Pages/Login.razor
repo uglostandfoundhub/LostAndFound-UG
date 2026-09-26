@@ -1,0 +1,70 @@
+@page "/login"
+@layout AuthLayout
+@using LostAndFound.Client.Services
+@using LostAndFound.Shared.Dtos.Auth
+@inject ApiAuthStateProvider AuthState
+@inject ApiClient Api
+@inject NavigationManager Nav
+
+<PageTitle>Login</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-visual">
+        <div class="auth-visual-content">
+            <div class="auth-emblem">L&amp;F</div>
+            <h1>Campus Lost &amp; Found</h1>
+            <p>Reuniting students and staff with what they've lost, one report at a time.</p>
+        </div>
+    </div>
+
+    <div class="auth-form-panel">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <div class="auth-logo">L&amp;F</div>
+                <h2>Welcome back</h2>
+                <p class="auth-subtitle">Sign in to continue</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+
+            <div class="auth-field">
+                <label>Email</label>
+                <input class="auth-input" @bind="model.Email" />
+            </div>
+            <div class="auth-field">
+                <label>Password</label>
+                <input type="password" class="auth-input" @bind="model.Password" />
+            </div>
+
+            <button class="btn-auth" @onclick="DoLogin" disabled="@busy">@(busy ? "Please wait..." : "Login")</button>
+
+            <p class="auth-footer-link">Don't have an account? <a href="register">Register</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest model = new();
+    private string error = string.Empty;
+    private bool busy;
+
+    private async Task DoLogin()
+    {
+        busy = true;
+        error = string.Empty;
+
+        var response = await Api.LoginAsync(model);
+        if (response is null)
+        {
+            error = "Invalid credentials.";
+            busy = false;
+            return;
+        }
+
+        await AuthState.LoginAsync(response.Token);
+        Nav.NavigateTo("");
+    }
+}

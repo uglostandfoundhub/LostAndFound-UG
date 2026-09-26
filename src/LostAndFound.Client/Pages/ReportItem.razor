@@ -1,0 +1,152 @@
+@page "/report"
+@using LostAndFound.Shared.Dtos.Items
+@inject ApiClient Api
+@inject LookupsCache Lookups
+@inject NavigationManager Nav
+@inject ApiAuthStateProvider AuthState
+
+<PageTitle>Report Item</PageTitle>
+
+<h3>Report a lost or found item</h3>
+
+@if (!authed)
+{
+    <div class="alert alert-warning">You must <a href="login">log in</a> to report an item.</div>
+    return;
+}
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group mb-2">
+            <label>Type</label>
+            <select class="form-select" @bind="typeValue">
+                <option value="0">Lost</option>
+                <option value="1">Found</option>
+            </select>
+        </div>
+        <div class="form-group mb-2">
+            <label>Title</label>
+            <input class="form-control" @bind="model.Title" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Description</label>
+            <textarea class="form-control" rows="3" @bind="model.Description"></textarea>
+        </div>
+        <div class="form-group mb-2">
+            <label>Category</label>
+            <select class="form-select" @bind="categoryValue">
+                <option value="">Select...</option>
+                @foreach (var c in categories) { <option value="@c.Id">@c.Name</option> }
+            </select>
+        </div>
+        <div class="form-group mb-2">
+            <label>Location</label>
+            <select class="form-select" @bind="locationValue">
+                <option value="">Select...</option>
+                @foreach (var l in locations) { <option value="@l.Id">@l.Name</option> }
+            </select>
+        </div>
+        <div class="form-group mb-2">
+            <label>Date occurred</label>
+            <input class="form-control" @bind="dateStr" placeholder="yyyy-MM-dd" />
+        </div>
+        @if (model.Type == ItemType.Found)
+        {
+            <div class="form-group mb-2">
+                <label>Verification question (only the true owner would know)</label>
+                <input class="form-control" @bind="model.VerificationQuestion" />
+            </div>
+        }
+        <div class="form-group mb-2">
+            <label>Contact info (optional)</label>
+            <input class="form-control" @bind="model.ContactInfo" />
+        </div>
+        <div class="form-group mb-2">
+            <label>Photos (optional)</label>
+            <InputFile OnChange="OnFilesSelected" multiple maxAllowedSize="5242880" />
+            @if (selectedImages.Count > 0)
+            {
+                <ul class="mt-1">
+                    @foreach (var img in selectedImages) { <li>@img.Name</li> }
+                </ul>
+            }
+        </div>
+        <button class="btn btn-primary" @onclick="Submit" disabled="@busy">@(busy ? "Submitting..." : "Submit report")</button>
+    </div>
+</div>
+
+@code {
+    private bool authed;
+    private string error = string.Empty;
+    private bool busy;
+
+    private CreateItemRequest model = new();
+    private string typeValue = "0";
+    private string categoryValue = string.Empty;
+    private string locationValue = string.Empty;
+    private string dateStr = string.Empty;
+    private IReadOnlyList<CategoryDto> categories = Array.Empty<CategoryDto>();
+    private IReadOnlyList<LocationDto> locations = Array.Empty<LocationDto>();
+
+    private List<(string Name, byte[] Content, string ContentType)> selectedImages = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthState.GetUserAsync();
+        authed = user.Identity?.IsAuthenticated == true;
+        if (authed)
+        {
+            categories = await Lookups.GetCategoriesAsync();
+            locations = await Lookups.GetLocationsAsync();
+        }
+    }
+
+    private async Task OnFilesSelected(InputFileChangeEventArgs e)
+    {
+        foreach (var file in e.GetMultipleFiles())
+        {
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+            selectedImages.Add((file.Name, ms.ToArray(), file.ContentType));
+        }
+    }
+
+    private async Task Submit()
+    {
+        error = string.Empty;
+
+        if (string.IsNullOrEmpty(categoryValue) || string.IsNullOrEmpty(locationValue))
+        {
+            error = "Please select a category and a location.";
+            return;
+        }
+
+        busy = true;
+
+        model.Type = (ItemType)int.Parse(typeValue);
+        model.CategoryId = int.Parse(categoryValue);
+        model.LocationId = int.Parse(locationValue);
+        model.DateOccurred = DateTime.TryParse(dateStr, out var d) ? d : DateTime.UtcNow;
+
+        var created = await Api.CreateItemAsync(model);
+        if (created is null)
+        {
+            error = "Failed to create the report. Check the fields and try again.";
+            busy = false;
+            return;
+        }
+
+        for (var i = 0; i < selectedImages.Count; i++)
+        {
+            var img = selectedImages[i];
+            await Api.UploadImageAsync(created.Id, img.Name, img.Content, img.ContentType, i == 0);
+        }
+
+        Nav.NavigateTo($"/items/{created.Id}");
+    }
+}

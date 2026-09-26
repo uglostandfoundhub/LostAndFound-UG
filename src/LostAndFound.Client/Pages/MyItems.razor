@@ -1,0 +1,72 @@
+@page "/my-items"
+@using LostAndFound.Shared.Dtos.Items
+@inject ApiClient Api
+@inject LookupsCache Lookups
+@inject NavigationManager Nav
+
+<PageTitle>My Items</PageTitle>
+
+<h3>My reported items</h3>
+
+@if (!authed)
+{
+    <div class="alert alert-warning">You must <a href="login">log in</a> to view your items.</div>
+    return;
+}
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else if (items is null)
+{
+    <div class="alert alert-warning">Could not load your items.</div>
+}
+else if (items.Count == 0)
+{
+    <p>You haven't reported any items yet. <a href="report">Report one</a>.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Category</th><th>Location</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var it in items)
+        {
+            <tr>
+                <td><a href="/items/@it.Id">@it.Title</a></td>
+                <td>@it.Type</td>
+                <td>@it.Status</td>
+                <td>@Lookups.CategoryName(it.CategoryId)</td>
+                <td>@Lookups.LocationName(it.LocationId)</td>
+                <td><button class="btn btn-sm btn-outline-danger" @onclick="() => Delete(it.Id)">Delete</button></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool authed;
+    private bool loading = true;
+    private IReadOnlyList<ItemDto>? items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Api.GetCurrentUserAsync();
+        authed = user is not null;
+        if (authed)
+        {
+            items = await Api.GetMyItemsAsync();
+        }
+        loading = false;
+    }
+
+    private async Task Delete(int id)
+    {
+        if (await Api.DeleteItemAsync(id))
+        {
+            items = items?.Where(i => i.Id != id).ToList();
+        }
+    }
+}

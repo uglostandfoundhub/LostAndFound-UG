@@ -1,0 +1,45 @@
+@inject ApiAuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<button title="Navigation menu" class="nav-toggle" @onclick="ToggleNavMenu">
+    <span class="nav-toggle-bar"></span>
+    <span class="nav-toggle-bar"></span>
+    <span class="nav-toggle-bar"></span>
+</button>
+
+<nav class="main-nav @NavMenuCssClass">
+    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+    <NavLink class="nav-link" href="items">Items</NavLink>
+
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-link" href="report">Report</NavLink>
+            <NavLink class="nav-link" href="my-items">My Items</NavLink>
+            <NavLink class="nav-link" href="matches">Matches</NavLink>
+            <NavLink class="nav-link" href="notifications">Notifications</NavLink>
+            <NavLink class="nav-link" href="claims">Claims</NavLink>
+            <button class="nav-link nav-link-btn" @onclick="Logout">Logout (@context.User.Identity?.Name)</button>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="nav-link" href="login">Login</NavLink>
+            <NavLink class="nav-link nav-link-cta" href="register">Register</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : "expanded";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task Logout()
+    {
+        await AuthState.LogoutAsync();
+        Nav.NavigateTo("");
+    }
+}

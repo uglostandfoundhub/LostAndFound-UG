@@ -1,0 +1,29 @@
+@inherits LayoutComponentBase
+
+<div class="app-shell">
+    <div class="top-strip">
+        <div class="top-strip-inner">
+            <span>University of Ghana &middot; Campus Lost &amp; Found</span>
+        </div>
+    </div>
+
+    <header class="app-header">
+        <div class="app-header-inner">
+            <a class="brand" href="">
+                <span class="brand-mark">L&amp;F</span>
+                <span class="brand-text">Lost &amp; Found</span>
+            </a>
+            <NavMenu />
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="app-content">
+            @Body
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <span>&copy; @DateTime.Now.Year University of Ghana Lost &amp; Found</span>
+    </footer>
+</div>

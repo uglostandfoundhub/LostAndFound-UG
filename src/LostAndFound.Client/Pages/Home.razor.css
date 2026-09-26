@@ -1,0 +1,23 @@
+.home-hero {
+    background: linear-gradient(135deg, var(--ug-navy) 0%, #2c1652 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 2.5rem 2rem;
+    margin-bottom: 1.75rem;
+}
+
+.home-hero h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.home-hero .lead, .home-hero p {
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+}
+
+.home-hero ::deep a {
+    color: var(--ug-gold);
+    font-weight: 600;
+}

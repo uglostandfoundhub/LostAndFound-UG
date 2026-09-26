@@ -1,0 +1,102 @@
+@page "/claims"
+@using LostAndFound.Shared.Dtos.Claims
+@using LostAndFound.Shared.Dtos
+@inject ApiClient Api
+@inject ApiAuthStateProvider AuthState
+
+<PageTitle>Claims</PageTitle>
+
+<h3>Claims</h3>
+
+@if (!authed)
+{
+    <div class="alert alert-warning">You must <a href="login">log in</a> to view claims.</div>
+    return;
+}
+
+@if (isStaffOrAdmin)
+{
+    <p class="text-muted">Reviewing mode — all pending claims.</p>
+    @if (loading) { <p>Loading...</p> }
+    else if (allClaims is null) { <div class="alert alert-warning">Could not load claims.</div> }
+    else if (allClaims.Count == 0) { <p>No claims yet.</p> }
+    else
+    {
+        <table class="table table-striped">
+            <thead><tr><th>Item</th><th>Claimant</th><th>Answer</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var c in allClaims)
+            {
+                <tr>
+                    <td><a href="/items/@c.ItemId">@c.ItemTitle</a></td>
+                    <td>@c.ClaimantName</td>
+                    <td>@c.VerificationAnswer</td>
+                    <td>@c.Status</td>
+                    <td>
+                        @if (c.Status == ClaimStatus.Pending)
+                        {
+                            <button class="btn btn-sm btn-success me-1" @onclick="() => Review(c.Id, ClaimStatus.Approved)">Approve</button>
+                            <button class="btn btn-sm btn-warning" @onclick="() => Review(c.Id, ClaimStatus.Rejected)">Reject</button>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p class="text-muted">Claims you have submitted.</p>
+    @if (loading) { <p>Loading...</p> }
+    else if (mine is null) { <div class="alert alert-warning">Could not load your claims.</div> }
+    else if (mine.Count == 0) { <p>You have no claims yet.</p> }
+    else
+    {
+        <table class="table table-striped">
+            <thead><tr><th>Item</th><th>Answer</th><th>Status</th></tr></thead>
+            <tbody>
+            @foreach (var c in mine)
+            {
+                <tr>
+                    <td><a href="/items/@c.ItemId">@c.ItemTitle</a></td>
+                    <td>@c.VerificationAnswer</td>
+                    <td>@c.Status</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private bool authed;
+    private bool isStaffOrAdmin;
+    private bool loading = true;
+    private IReadOnlyList<ClaimDto>? allClaims;
+    private IReadOnlyList<ClaimDto>? mine;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthState.GetUserAsync();
+        authed = user.Identity?.IsAuthenticated == true;
+        if (!authed) return;
+
+        isStaffOrAdmin = user.IsInRole("Staff") || user.IsInRole("Admin");
+        if (isStaffOrAdmin)
+        {
+            allClaims = await Api.GetAllClaimsAsync();
+        }
+        else
+        {
+            mine = await Api.GetMyClaimsAsync();
+        }
+        loading = false;
+    }
+
+    private async Task Review(int id, ClaimStatus status)
+    {
+        await Api.ReviewClaimAsync(id, new ReviewClaimRequest { Status = status });
+        allClaims = await Api.GetAllClaimsAsync();
+    }
+}

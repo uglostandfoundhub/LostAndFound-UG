@@ -1,0 +1,47 @@
+﻿@page "/"
+@inject ApiClient Api
+
+<PageTitle>Lost &amp; Found Hub</PageTitle>
+
+<div class="home-hero">
+    <h1>University Lost &amp; Found Hub</h1>
+    <AuthorizeView>
+        <Authorized>
+            <p class="lead">Welcome, @context.User.Identity?.Name!</p>
+        </Authorized>
+        <NotAuthorized>
+            <p>Please <a href="login">log in</a> or <a href="register">register</a> to report and claim items.</p>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+<div class="row mt-3 g-3">
+    <div class="col-md-3">
+        <div class="card h-100 p-3">
+            <h5>Browse items</h5>
+            <p>Search lost &amp; found reports across campus.</p>
+            <a class="btn btn-outline-primary mt-auto" href="items">Browse</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-3">
+            <h5>Report an item</h5>
+            <p>Log something you lost or found.</p>
+            <a class="btn btn-outline-primary mt-auto" href="report">Report</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-3">
+            <h5>My items</h5>
+            <p>Manage your own reports.</p>
+            <a class="btn btn-outline-primary mt-auto" href="my-items">My items</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 p-3">
+            <h5>Matches</h5>
+            <p>Potential matches for your reports.</p>
+            <a class="btn btn-outline-primary mt-auto" href="matches">View</a>
+        </div>
+    </div>
+</div>

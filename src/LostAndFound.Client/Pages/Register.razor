@@ -1,0 +1,83 @@
+@page "/register"
+@layout AuthLayout
+@using LostAndFound.Shared.Dtos.Auth
+@inject ApiClient Api
+@inject NavigationManager Nav
+@inject ApiAuthStateProvider AuthState
+
+<PageTitle>Register</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-visual">
+        <div class="auth-visual-content">
+            <div class="auth-emblem">L&amp;F</div>
+            <h1>Join Campus Lost &amp; Found</h1>
+            <p>Create an account to report lost items, browse found items, and get matched automatically.</p>
+        </div>
+    </div>
+
+    <div class="auth-form-panel">
+        <div class="auth-card auth-card--wide">
+            <div class="auth-card-header">
+                <div class="auth-logo">L&amp;F</div>
+                <h2>Create an account</h2>
+                <p class="auth-subtitle">It only takes a minute</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+
+            <div class="auth-field">
+                <label>Full name</label>
+                <input class="auth-input" @bind="model.FullName" />
+            </div>
+            <div class="auth-field">
+                <label>Email</label>
+                <input class="auth-input" @bind="model.Email" />
+            </div>
+            <div class="auth-field">
+                <label>Password</label>
+                <input type="password" class="auth-input" @bind="model.Password" />
+            </div>
+            <div class="auth-fields-grid">
+                <div class="auth-field">
+                    <label>Student ID (optional)</label>
+                    <input class="auth-input" @bind="model.StudentId" />
+                </div>
+                <div class="auth-field">
+                    <label>Department (optional)</label>
+                    <input class="auth-input" @bind="model.Department" />
+                </div>
+            </div>
+
+            <button class="btn-auth" @onclick="DoRegister" disabled="@busy">@(busy ? "Creating..." : "Register")</button>
+
+            <p class="auth-footer-link">Already have an account? <a href="login">Log in</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest model = new();
+    private string error = string.Empty;
+    private bool busy;
+
+    private async Task DoRegister()
+    {
+        busy = true;
+        error = string.Empty;
+
+        var response = await Api.RegisterAsync(model);
+        if (response is null)
+        {
+            error = "Registration failed. The email may already be in use or the password is too weak.";
+            busy = false;
+            return;
+        }
+
+        await AuthState.LoginAsync(response.Token);
+        Nav.NavigateTo("");
+    }
+}

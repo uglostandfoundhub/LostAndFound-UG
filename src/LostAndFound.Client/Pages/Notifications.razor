@@ -1,0 +1,72 @@
+@page "/notifications"
+@using LostAndFound.Shared.Dtos.Notifications
+@inject ApiClient Api
+
+<PageTitle>Notifications</PageTitle>
+
+<h3>Notifications</h3>
+
+@if (!authed)
+{
+    <div class="alert alert-warning">You must <a href="login">log in</a> to view notifications.</div>
+    return;
+}
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else if (notes is null)
+{
+    <div class="alert alert-warning">Could not load notifications.</div>
+}
+else if (notes.Count == 0)
+{
+    <p>No notifications.</p>
+}
+else
+{
+    <ul class="list-group">
+    @foreach (var n in notes)
+    {
+        <li class="list-group-item @(n.IsRead ? "" : "list-group-item-primary")">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <strong>@n.Title</strong>
+                    <p class="mb-0">@n.Message</p>
+                    @if (n.RelatedItemId.HasValue) { <a href="/items/@n.RelatedItemId">View item</a> }
+                </div>
+                @if (!n.IsRead)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="() => MarkRead(n.Id)">Mark read</button>
+                }
+            </div>
+        </li>
+    }
+    </ul>
+}
+
+@code {
+    private bool authed;
+    private bool loading = true;
+    private IReadOnlyList<NotificationDto>? notes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Api.GetCurrentUserAsync();
+        authed = user is not null;
+        if (authed)
+        {
+            notes = await Api.GetMyNotificationsAsync();
+        }
+        loading = false;
+    }
+
+    private async Task MarkRead(int id)
+    {
+        if (await Api.MarkNotificationReadAsync(id))
+        {
+            notes = await Api.GetMyNotificationsAsync();
+        }
+    }
+}
